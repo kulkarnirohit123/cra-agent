@@ -1,0 +1,26 @@
+# Secrets
+.env
+*.pem
+*.key
+
+# Runtime data (may contain private repo names, commit data, findings)
+data/
+repos/
+target-repo/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / agent session state
+.claude/
+.agents/
+
+# OS
+.DS_Store

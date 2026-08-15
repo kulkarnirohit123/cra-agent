@@ -1,0 +1,132 @@
+# =============================================================================
+# CRA-AGENT Docker Compose Configuration
+# =============================================================================
+# This file defines the services needed to run the CRA-AGENT locally.
+#
+# Usage:
+#   docker-compose up -d          # Start all services
+#   docker-compose up agent       # Start only the agent
+#   docker-compose up webhook     # Start only the webhook server
+#   docker-compose logs -f        # Follow logs
+#   docker-compose down           # Stop all services
+
+version: "3.8"
+
+services:
+  # ---------------------------------------------------------------------------
+  # CRA-AGENT Main Service
+  # ---------------------------------------------------------------------------
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cra-agent
+    command: python -m src.main
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=INFO
+      - GIT_REPO_PATH=/app/repo
+      - GIT_BRANCHES=main,develop
+      - GIT_POLL_INTERVAL_SECONDS=60
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - JIRA_BASE_URL=${JIRA_BASE_URL}
+      - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY:-CRA}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+      - SUPPRESSION_DB_PATH=/app/data/suppressions.db
+    volumes:
+      - ./data:/app/data
+      - ${GIT_REPO_PATH:-./target-repo}:/app/repo:ro
+    restart: unless-stopped
+    networks:
+      - cra-network
+
+  # ---------------------------------------------------------------------------
+  # Webhook Server Service
+  # ---------------------------------------------------------------------------
+  webhook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cra-webhook
+    command: uvicorn src.webhook.server:app --host 0.0.0.0 --port 8080
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=INFO
+      - JIRA_BASE_URL=${JIRA_BASE_URL}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+      - JIRA_WEBHOOK_SECRET=${JIRA_WEBHOOK_SECRET}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SUPPRESSION_DB_PATH=/app/data/suppressions.db
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ${GIT_REPO_PATH:-./target-repo}:/app/repo:ro
+    restart: unless-stopped
+    networks:
+      - cra-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Ngrok Tunnel (for exposing webhook to Jira)
+  # ---------------------------------------------------------------------------
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: cra-ngrok
+    command: http webhook:8080
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"  # Ngrok web interface
+    depends_on:
+      - webhook
+    networks:
+      - cra-network
+    profiles:
+      - tunnel
+
+  # ---------------------------------------------------------------------------
+  # Dashboard UI Service (Streamlit)
+  # ---------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cra-dashboard
+    command: streamlit run src/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    environment:
+      - METRICS_DB_PATH=/app/data/metrics.db
+      - SUPPRESSION_DB_PATH=/app/data/suppressions.db
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - cra-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+networks:
+  cra-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local

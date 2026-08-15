@@ -1,0 +1,195 @@
+# =============================================================================
+# CRA-AGENT Scanner Rules Configuration
+# =============================================================================
+# This file defines scanner behavior, severity thresholds, and triage rules.
+
+# -----------------------------------------------------------------------------
+# Scanner Definitions
+# -----------------------------------------------------------------------------
+scanners:
+  dependency:
+    enabled: true
+    tools:
+      - pip-audit
+      - osv-scanner
+    severity_threshold: medium
+    file_patterns:
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "setup.py"
+      - "setup.cfg"
+      - "Pipfile"
+      - "Pipfile.lock"
+      - "poetry.lock"
+      - "package.json"
+      - "package-lock.json"
+      - "yarn.lock"
+      - "go.mod"
+      - "go.sum"
+      - "Gemfile"
+      - "Gemfile.lock"
+    description: "Scans dependencies for known CVEs and security advisories"
+
+  sast:
+    enabled: true
+    tool: semgrep
+    rulesets:
+      - owasp-top-ten
+      - cwe-top-25
+      - security-audit
+    severity_threshold: medium
+    file_patterns:
+      - "*.py"
+      - "*.js"
+      - "*.ts"
+      - "*.jsx"
+      - "*.tsx"
+      - "*.java"
+      - "*.go"
+      - "*.rb"
+      - "*.php"
+      - "*.c"
+      - "*.cpp"
+      - "*.rs"
+    exclude_patterns:
+      - "node_modules/**"
+      - "vendor/**"
+      - "dist/**"
+      - "build/**"
+      - "*.min.js"
+      - "*.test.*"
+      - "*.spec.*"
+    description: "Static analysis for code-level vulnerabilities (injection, XSS, etc.)"
+
+  secrets:
+    enabled: true
+    tool: gitleaks
+    severity_threshold: high
+    file_patterns:
+      - "*"
+    exclude_patterns:
+      - ".env.example"
+      - "*.md"
+      - "test/fixtures/**"
+      - "tests/fixtures/**"
+    allowlist:
+      - "EXAMPLE_KEY"
+      - "YOUR_API_KEY"
+      - "sk-your-"
+      - "placeholder"
+    description: "Detects hardcoded secrets, API keys, and credentials"
+
+# -----------------------------------------------------------------------------
+# Severity Levels (ordered by priority)
+# -----------------------------------------------------------------------------
+severity_levels:
+  critical:
+    weight: 10
+    sla_hours: 24
+    auto_triage: true
+    description: "Exploitable vulnerability with known public exploit"
+  high:
+    weight: 8
+    sla_hours: 72
+    auto_triage: true
+    description: "Serious vulnerability that could lead to significant impact"
+  medium:
+    weight: 5
+    sla_hours: 168  # 1 week
+    auto_triage: false
+    description: "Vulnerability with moderate impact or limited exploitability"
+  low:
+    weight: 2
+    sla_hours: 720  # 30 days
+    auto_triage: false
+    description: "Minor issue with minimal security impact"
+  info:
+    weight: 1
+    sla_hours: 0  # no SLA
+    auto_triage: false
+    description: "Informational finding, no direct security impact"
+
+# -----------------------------------------------------------------------------
+# Triage Rules
+# -----------------------------------------------------------------------------
+triage:
+  # Severities that trigger automatic fix attempts
+  auto_fix_severity:
+    - critical
+    - high
+
+  # Jira labels that trigger suppression
+  suppress_on_jira_labels:
+    - known-issue
+    - false-positive
+    - accepted-risk
+    - wont-fix
+    - duplicate
+
+  # Jira transitions that trigger fix workflow
+  fix_on_jira_transitions:
+    - Fix Required
+    - To Do
+    - In Progress
+
+  # Jira transitions that trigger suppression
+  ignore_on_jira_transitions:
+    - Won't Fix
+    - Ignore
+    - Known Issue
+    - Duplicate
+    - Rejected
+
+  # Jira transitions that trigger re-scan
+  rescan_on_jira_transitions:
+    - Reopened
+    - Reopen
+
+# -----------------------------------------------------------------------------
+# CRA Compliance Mapping
+# -----------------------------------------------------------------------------
+cra_mapping:
+  annex_i_section_1:
+    title: "Security requirements"
+    description: "Products shall be designed to be secure by default"
+    finding_types:
+      - hardcoded_credentials
+      - insecure_defaults
+      - weak_cryptography
+
+  annex_i_section_2:
+    title: "Vulnerability handling process"
+    description: "Manufacturers shall identify and document vulnerabilities"
+    finding_types:
+      - known_cve
+      - dependency_vulnerability
+      - code_vulnerability
+
+  annex_ii:
+    title: "SBOM / Software component transparency"
+    description: "Products shall include or make available an SBOM"
+    finding_types:
+      - missing_sbom
+      - outdated_dependency
+      - unmaintained_dependency
+
+  article_13:
+    title: "Reporting obligations"
+    description: "Actively exploited vulnerabilities must be reported within 24 hours"
+    finding_types:
+      - actively_exploited
+      - zero_day
+      - critical_cve
+
+# -----------------------------------------------------------------------------
+# Suppression Defaults
+# -----------------------------------------------------------------------------
+suppression:
+  # Default expiry for suppressions (days, 0 = no expiry)
+  default_expiry_days: 0
+
+  # Require reason for suppression
+  require_reason: true
+
+  # Maximum suppressions per finding type
+  max_suppressions_per_cve: 10

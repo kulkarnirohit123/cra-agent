@@ -1,0 +1,105 @@
+# =============================================================================
+# CRA-AGENT Multi-Repository Configuration
+# =============================================================================
+# Configure which GitHub repositories to monitor for CRA compliance.
+#
+# Each repository can have its own scanner configuration and branch settings.
+
+# Global settings applied to all repositories
+global:
+  # Default branches to monitor
+  branches:
+    - main
+    - master
+    - develop
+  
+  # Default scanners to run
+  scanners:
+    - bandit      # Python security
+    - semgrep     # Multi-language SAST
+    - trivy       # Dependencies, containers, IaC
+    - gitleaks    # Secrets detection
+  
+  # Minimum severity to report
+  severity_threshold: medium
+  
+  # Auto-create Jira tickets for findings
+  auto_create_tickets: true
+  
+  # Auto-report to EU VD for critical findings
+  auto_report_eu_vd: true
+
+# Repository-specific configurations
+repositories:
+  # Example: Python application
+  - name: your-org/your-python-repo
+    description: "Example Python application"
+    enabled: false
+    branches:
+      - main
+    scanners:
+      - bandit
+      - semgrep
+      - gitleaks
+    language: python
+    severity_threshold: medium
+
+  # Example: Terraform IaC repo
+  - name: your-org/your-terraform-repo
+    description: "Example Terraform/IaC repository"
+    enabled: false
+    branches:
+      - main
+    scanners:
+      - trivy
+      - gitleaks
+    language: terraform
+    severity_threshold: medium
+
+# Scanner-specific configurations
+scanner_config:
+  bandit:
+    confidence_threshold: medium
+    exclude_tests: true
+    
+  semgrep:
+    rules:
+      - p/security-audit
+      - p/owasp-top-ten
+      - p/cwe-top-25
+    
+  trivy:
+    scan_type: fs
+    scanners:
+      - vuln
+      - config
+      - secret
+    
+  gitleaks:
+    allowlist_paths:
+      - "**/test/**"
+      - "**/*.test.*"
+
+# Notification settings
+notifications:
+  # Slack webhook for critical findings
+  slack_webhook: ""
+  
+  # Email for daily reports
+  email: ""
+  
+  # GitHub PR comments
+  github_comments: true
+
+# EU VD reporting settings
+eu_vd:
+  enabled: true
+  # Only report these severities
+  report_severities:
+    - critical
+    - high
+  # Reporting deadlines (hours)
+  deadlines:
+    exploited: 24
+    critical: 72
+    standard: 336  # 14 days
