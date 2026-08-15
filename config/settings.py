@@ -110,6 +110,16 @@ class Settings(BaseSettings):
     cra_report_exploited_within_hours: int = 24
 
     # -------------------------------------------------------------------------
+    # EU Vulnerability Database (EUVD)
+    # -------------------------------------------------------------------------
+    euvd_api_key: str = ""
+    euvd_base_url: str = "https://eu-vd.enisa.europa.eu/api/v1"
+    euvd_organization_id: str = "CRA-AGENT-001"
+    euvd_dry_run: bool = True
+    euvd_auto_sync: bool = True
+    euvd_refresh_interval_hours: int = 4
+
+    # -------------------------------------------------------------------------
     # GitHub App Integration
     # -------------------------------------------------------------------------
     github_app_id: str = ""
