@@ -8,9 +8,9 @@ checks for new commits and triggers scans.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -92,9 +92,7 @@ class GitHubPoller:
 
         return self._repos_config.get("repositories", [])
 
-    async def check_for_new_commits(
-        self, owner: str, repo: str, branch: str
-    ) -> list[dict[str, Any]]:
+    async def check_for_new_commits(self, owner: str, repo: str, branch: str) -> list[dict[str, Any]]:
         """Check for new commits since last scan.
 
         Args:

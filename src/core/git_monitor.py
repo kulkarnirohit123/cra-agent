@@ -8,9 +8,9 @@ Supports two modes:
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncIterator
 
 import git
 from git import Repo

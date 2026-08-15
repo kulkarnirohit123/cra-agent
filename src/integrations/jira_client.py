@@ -194,9 +194,7 @@ class JiraClient:
         """
         # First, get available transitions
         try:
-            response = await self.client.get(
-                f"/rest/api/3/issue/{issue_key}/transitions"
-            )
+            response = await self.client.get(f"/rest/api/3/issue/{issue_key}/transitions")
             response.raise_for_status()
             transitions = response.json().get("transitions", [])
 
@@ -240,11 +238,7 @@ class JiraClient:
         Returns:
             True if labels were added.
         """
-        payload = {
-            "update": {
-                "labels": [{"add": label} for label in labels]
-            }
-        }
+        payload = {"update": {"labels": [{"add": label} for label in labels]}}
 
         try:
             response = await self.client.put(

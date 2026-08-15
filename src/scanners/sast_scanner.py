@@ -127,9 +127,7 @@ class SASTScanner(BaseScanner):
 
         # Filter to scannable files
         scannable_files = [
-            f
-            for f in files
-            if f.file_extension in SAST_FILE_EXTENSIONS and not self._is_excluded(f.file_path)
+            f for f in files if f.file_extension in SAST_FILE_EXTENSIONS and not self._is_excluded(f.file_path)
         ]
 
         if not scannable_files:

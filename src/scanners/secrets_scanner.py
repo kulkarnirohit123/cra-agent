@@ -276,17 +276,11 @@ class SecretsScanner(BaseScanner):
         desc_lower = description.lower()
 
         # Critical: Private keys, AWS/GCP/Azure credentials
-        if any(
-            kw in desc_lower
-            for kw in ["private key", "aws", "gcp", "azure", "github token", "slack"]
-        ):
+        if any(kw in desc_lower for kw in ["private key", "aws", "gcp", "azure", "github token", "slack"]):
             return Severity.CRITICAL
 
         # High: API keys, passwords, database credentials
-        elif any(
-            kw in desc_lower
-            for kw in ["api key", "password", "database", "connection string", "oauth"]
-        ):
+        elif any(kw in desc_lower for kw in ["api key", "password", "database", "connection string", "oauth"]):
             return Severity.HIGH
 
         # Medium: Generic secrets

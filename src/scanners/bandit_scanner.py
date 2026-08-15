@@ -82,10 +82,7 @@ class BanditScanner(BaseScanner):
         findings: list[Finding] = []
 
         # Filter to Python files
-        python_files = [
-            f for f in files
-            if f.file_extension in PYTHON_EXTENSIONS
-        ]
+        python_files = [f for f in files if f.file_extension in PYTHON_EXTENSIONS]
 
         if not python_files:
             return findings
@@ -97,8 +94,10 @@ class BanditScanner(BaseScanner):
             # Build bandit command
             cmd = [
                 self.bandit_path,
-                "-f", "json",
-                "-c", "-",  # Use default config
+                "-f",
+                "json",
+                "-c",
+                "-",  # Use default config
                 "-ll",  # Report only high severity
                 "-ii",  # Report only medium+ confidence
             ]

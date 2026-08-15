@@ -6,7 +6,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -93,7 +92,7 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Webhook Server
     # -------------------------------------------------------------------------
-    webhook_host: str = "0.0.0.0"
+    webhook_host: str = "0.0.0.0"  # noqa: S104 — container default, override via WEBHOOK_HOST
     webhook_port: int = 8080
 
     # -------------------------------------------------------------------------

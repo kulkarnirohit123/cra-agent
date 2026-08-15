@@ -6,7 +6,6 @@ These models track agent performance, effectiveness, and business value.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field

@@ -15,15 +15,15 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from src.utils.logger import get_logger
-from src.webhook.handlers import JiraWebhookHandler
 from src.webhook.github_handler import GitHubWebhookHandler
+from src.webhook.handlers import JiraWebhookHandler
 
 if TYPE_CHECKING:
-    from src.scanners.suppression_store import SuppressionStore
-    from src.integrations.jira_client import JiraClient
-    from src.integrations.llm_client import LLMClient
     from src.integrations.git_client import GitClient
     from src.integrations.github_client import GitHubClient
+    from src.integrations.jira_client import JiraClient
+    from src.integrations.llm_client import LLMClient
+    from src.scanners.suppression_store import SuppressionStore
 
 logger = get_logger(__name__)
 

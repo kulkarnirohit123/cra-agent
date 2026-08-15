@@ -8,18 +8,17 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime
-from enum import Enum
-from typing import Any, Literal, TypedDict
+from enum import StrEnum
+from typing import Any, TypedDict
 
 from pydantic import BaseModel, Field
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     """Vulnerability severity levels."""
 
     CRITICAL = "critical"
@@ -45,7 +44,7 @@ class Severity(str, Enum):
         return self.weight >= other.weight
 
 
-class ChangeType(str, Enum):
+class ChangeType(StrEnum):
     """Type of file change in a commit."""
 
     ADDED = "added"
@@ -54,7 +53,7 @@ class ChangeType(str, Enum):
     RENAMED = "renamed"
 
 
-class ActionType(str, Enum):
+class ActionType(StrEnum):
     """Types of actions the agent can take."""
 
     SCAN = "scan"
@@ -67,7 +66,7 @@ class ActionType(str, Enum):
     NOTIFY = "notify"
 
 
-class Exploitability(str, Enum):
+class Exploitability(StrEnum):
     """Exploitability assessment levels."""
 
     CONFIRMED = "confirmed"
@@ -76,7 +75,7 @@ class Exploitability(str, Enum):
     UNLIKELY = "unlikely"
 
 
-class CRARelevance(str, Enum):
+class CRARelevance(StrEnum):
     """CRA article/annex relevance mapping."""
 
     ANNEX_I_SECTION_1 = "annex_i_section_1"
@@ -86,7 +85,7 @@ class CRARelevance(str, Enum):
     NONE = "none"
 
 
-class RecommendedAction(str, Enum):
+class RecommendedAction(StrEnum):
     """Recommended triage actions."""
 
     FIX_NOW = "fix_now"
@@ -200,9 +199,7 @@ class TriageResult(BaseModel):
 
     severity: Severity = Field(description="Assessed severity")
     exploitability: Exploitability = Field(description="Exploitability assessment")
-    cra_relevance: list[CRARelevance] = Field(
-        default_factory=list, description="Applicable CRA articles"
-    )
+    cra_relevance: list[CRARelevance] = Field(default_factory=list, description="Applicable CRA articles")
     recommended_action: RecommendedAction = Field(description="Recommended action")
     reasoning: str = Field(description="LLM reasoning for the assessment")
     fix_suggestion: str | None = Field(default=None, description="Suggested fix approach")
@@ -213,12 +210,8 @@ class TriagedFinding(Finding):
     """A finding enriched with triage assessment."""
 
     triage: TriageResult = Field(description="Triage assessment")
-    cra_mapping: list[str] = Field(
-        default_factory=list, description="Applicable CRA article references"
-    )
-    sbom_component: str | None = Field(
-        default=None, description="Affected SBOM component identifier"
-    )
+    cra_mapping: list[str] = Field(default_factory=list, description="Applicable CRA article references")
+    sbom_component: str | None = Field(default=None, description="Affected SBOM component identifier")
 
 
 # =============================================================================
@@ -284,15 +277,11 @@ class JiraWebhookEvent(BaseModel):
     webhook_event: str = Field(description="Event type (e.g., jira:issue_updated)")
     issue_key: str = Field(description="Issue key from the event")
     issue_id: str = Field(description="Issue ID")
-    transition_name: str | None = Field(
-        default=None, description="Workflow transition name (if any)"
-    )
+    transition_name: str | None = Field(default=None, description="Workflow transition name (if any)")
     comment_body: str | None = Field(default=None, description="Comment body (if comment event)")
     user_name: str = Field(default="", description="User who triggered the event")
     user_email: str = Field(default="", description="User email")
-    changelog_items: list[dict[str, Any]] = Field(
-        default_factory=list, description="Changed fields"
-    )
+    changelog_items: list[dict[str, Any]] = Field(default_factory=list, description="Changed fields")
     raw_payload: dict[str, Any] = Field(default_factory=dict, description="Full webhook payload")
 
 

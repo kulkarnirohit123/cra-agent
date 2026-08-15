@@ -10,7 +10,7 @@ This client handles:
 
 from __future__ import annotations
 
-import json
+import shutil
 import subprocess
 import time
 from datetime import datetime, timedelta
@@ -90,11 +90,7 @@ class GitHubClient:
             Installation access token.
         """
         # Check if we have a valid token
-        if (
-            self._installation_token
-            and self._token_expires_at
-            and datetime.utcnow() < self._token_expires_at
-        ):
+        if self._installation_token and self._token_expires_at and datetime.utcnow() < self._token_expires_at:
             return self._installation_token
 
         # Generate new token
@@ -155,9 +151,7 @@ class GitHubClient:
         response.raise_for_status()
         return response.json()
 
-    async def get_commit(
-        self, owner: str, repo: str, sha: str
-    ) -> dict[str, Any]:
+    async def get_commit(self, owner: str, repo: str, sha: str) -> dict[str, Any]:
         """Get commit details.
 
         Args:
@@ -173,9 +167,7 @@ class GitHubClient:
         response.raise_for_status()
         return response.json()
 
-    async def get_commit_diff(
-        self, owner: str, repo: str, sha: str
-    ) -> list[dict[str, Any]]:
+    async def get_commit_diff(self, owner: str, repo: str, sha: str) -> list[dict[str, Any]]:
         """Get files changed in a commit.
 
         Args:
@@ -197,9 +189,7 @@ class GitHubClient:
         commit_data = await self.get_commit(owner, repo, sha)
         return commit_data.get("files", [])
 
-    async def get_file_content(
-        self, owner: str, repo: str, path: str, ref: str = "main"
-    ) -> str:
+    async def get_file_content(self, owner: str, repo: str, path: str, ref: str = "main") -> str:
         """Get file content from repository.
 
         Args:
@@ -392,11 +382,12 @@ class GitHubClient:
         """
         repo_url = f"https://github.com/{owner}/{repo}.git"
         repo_path = target_dir / repo
+        git_path = shutil.which("git") or "git"
 
         if repo_path.exists():
             # Pull latest changes
             subprocess.run(
-                ["git", "pull", "origin", branch],
+                [git_path, "pull", "origin", branch],
                 cwd=repo_path,
                 capture_output=True,
                 check=True,
@@ -404,7 +395,7 @@ class GitHubClient:
         else:
             # Clone fresh
             subprocess.run(
-                ["git", "clone", "--branch", branch, "--depth", "50", repo_url, str(repo_path)],
+                [git_path, "clone", "--branch", branch, "--depth", "50", repo_url, str(repo_path)],
                 capture_output=True,
                 check=True,
             )

@@ -231,23 +231,29 @@ class JiraAgent:
         ]
 
         if finding.triage.fix_suggestion:
-            lines.extend([
-                "h3. Suggested Fix",
-                finding.triage.fix_suggestion,
-                "",
-            ])
+            lines.extend(
+                [
+                    "h3. Suggested Fix",
+                    finding.triage.fix_suggestion,
+                    "",
+                ]
+            )
 
         if finding.cra_mapping:
-            lines.extend([
-                "h3. CRA Compliance Mapping",
-                ", ".join(finding.cra_mapping),
-                "",
-            ])
+            lines.extend(
+                [
+                    "h3. CRA Compliance Mapping",
+                    ", ".join(finding.cra_mapping),
+                    "",
+                ]
+            )
 
-        lines.extend([
-            "----",
-            "_Created by CRA-AGENT_",
-        ])
+        lines.extend(
+            [
+                "----",
+                "_Created by CRA-AGENT_",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -301,7 +307,6 @@ class JiraAgent:
         """
         try:
             # Attach JSON evidence
-            import json
 
             evidence = finding.model_dump_json(indent=2)
             await self.jira_client.attach_file(

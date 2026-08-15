@@ -80,9 +80,12 @@ class TrivyScanner(BaseScanner):
             cmd = [
                 self.trivy_path,
                 self.scan_type,
-                "--format", "json",
-                "--severity", "LOW,MEDIUM,HIGH,CRITICAL",
-                "--scanners", "vuln,config,secret",
+                "--format",
+                "json",
+                "--severity",
+                "LOW,MEDIUM,HIGH,CRITICAL",
+                "--scanners",
+                "vuln,config,secret",
                 str(self.repo_path),
             ]
 

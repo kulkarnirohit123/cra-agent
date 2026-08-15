@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -90,19 +90,26 @@ def create_github_app(
     }
 
     # Write manifest to temp file
-    manifest_path = Path("/tmp/cra_agent_manifest.json")
-    manifest_path.write_text(json.dumps(manifest))
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+        tmp.write(json.dumps(manifest))
+        manifest_path = Path(tmp.name)
 
     print(f"\nCreating GitHub App '{name}'...")
     print(f"Webhook URL: {webhook_url}/webhook/github")
 
     # Use gh api to create the app
-    result = run_command([
-        "gh", "api",
-        "-X", "POST",
-        "/app-manifests",
-        "-f", f"manifest=@{manifest_path}",
-    ], check=False)
+    result = run_command(
+        [
+            "gh",
+            "api",
+            "-X",
+            "POST",
+            "/app-manifests",
+            "-f",
+            f"manifest=@{manifest_path}",
+        ],
+        check=False,
+    )
 
     if result.returncode != 0:
         print("Note: Automatic app creation requires manual setup.")
@@ -137,7 +144,7 @@ def generate_private_key(app_id: str) -> str:
     """
     key_path = Path(f"./cra-agent-{app_id}.private-key.pem")
 
-    print(f"\nGenerating private key...")
+    print("\nGenerating private key...")
     print("Note: You need to generate the private key from GitHub:")
     print(f"1. Go to: https://github.com/settings/apps/{app_id}")
     print("2. Click 'Generate a private key'")
@@ -166,10 +173,10 @@ def print_env_template(
     print("\nAdd these to your .env file:\n")
 
     env_vars = f"""# GitHub App Configuration
-GITHUB_APP_ID={app_id or '<your-app-id>'}
-GITHUB_INSTALLATION_ID={installation_id or '<your-installation-id>'}
-GITHUB_WEBHOOK_SECRET={webhook_secret or '<your-webhook-secret>'}
-GITHUB_PRIVATE_KEY_PATH={private_key_path or './cra-agent.private-key.pem'}
+GITHUB_APP_ID={app_id or "<your-app-id>"}
+GITHUB_INSTALLATION_ID={installation_id or "<your-installation-id>"}
+GITHUB_WEBHOOK_SECRET={webhook_secret or "<your-webhook-secret>"}
+GITHUB_PRIVATE_KEY_PATH={private_key_path or "./cra-agent.private-key.pem"}
 
 # Optional: GitHub API URL (for GitHub Enterprise)
 # GITHUB_API_URL=https://github.example.com/api/v3
@@ -199,9 +206,7 @@ GITHUB_PRIVATE_KEY_PATH={private_key_path or './cra-agent.private-key.pem'}
 
 def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Setup GitHub App for CRA-AGENT"
-    )
+    parser = argparse.ArgumentParser(description="Setup GitHub App for CRA-AGENT")
     parser.add_argument(
         "--name",
         default="CRA-AGENT",

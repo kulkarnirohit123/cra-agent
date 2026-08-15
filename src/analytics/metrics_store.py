@@ -17,7 +17,6 @@ from typing import Any
 
 from src.analytics.models import (
     AgentMetrics,
-    CommitMetrics,
     DashboardSummary,
     FindingMetrics,
     ROIMetrics,
@@ -318,7 +317,12 @@ class MetricsStore:
                     time_to_ticket_seconds = (julianday(?) - julianday(detected_at)) * 86400
                 WHERE finding_id = ?
             """,
-                (ticket_key, ticket_created_at.isoformat(), ticket_created_at.isoformat(), finding_id),
+                (
+                    ticket_key,
+                    ticket_created_at.isoformat(),
+                    ticket_created_at.isoformat(),
+                    finding_id,
+                ),
             )
             conn.commit()
 
@@ -554,9 +558,7 @@ class MetricsStore:
 
         with sqlite3.connect(self.db_path) as conn:
             # Last scan
-            last_scan = conn.execute(
-                "SELECT started_at FROM scans ORDER BY started_at DESC LIMIT 1"
-            ).fetchone()
+            last_scan = conn.execute("SELECT started_at FROM scans ORDER BY started_at DESC LIMIT 1").fetchone()
 
             # Today's metrics
             today_scans = conn.execute(
@@ -603,15 +605,9 @@ class MetricsStore:
             # All-time metrics
             total_scans = conn.execute("SELECT COUNT(*) FROM scans").fetchone()[0]
             total_findings = conn.execute("SELECT COUNT(*) FROM findings").fetchone()[0]
-            total_tickets = conn.execute(
-                "SELECT COUNT(*) FROM findings WHERE ticket_key IS NOT NULL"
-            ).fetchone()[0]
-            total_fixes = conn.execute(
-                "SELECT COUNT(*) FROM findings WHERE fix_completed_at IS NOT NULL"
-            ).fetchone()[0]
-            total_prs = conn.execute(
-                "SELECT COUNT(*) FROM findings WHERE pr_url IS NOT NULL"
-            ).fetchone()[0]
+            total_tickets = conn.execute("SELECT COUNT(*) FROM findings WHERE ticket_key IS NOT NULL").fetchone()[0]
+            total_fixes = conn.execute("SELECT COUNT(*) FROM findings WHERE fix_completed_at IS NOT NULL").fetchone()[0]
+            total_prs = conn.execute("SELECT COUNT(*) FROM findings WHERE pr_url IS NOT NULL").fetchone()[0]
 
             # Recent findings
             recent_findings_rows = conn.execute(

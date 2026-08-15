@@ -86,10 +86,7 @@ class EUVDReportingAgent:
             return True
 
         # Report high severity with likely exploitability
-        if (
-            finding.triage.severity == Severity.HIGH
-            and finding.triage.exploitability.value == "likely"
-        ):
+        if finding.triage.severity == Severity.HIGH and finding.triage.exploitability.value == "likely":
             return True
 
         # Report if CRA article 13 applies (reporting obligations)
@@ -481,12 +478,8 @@ class EUVDReportingAgent:
                 "within_14_days": len(reportable) - len(exploited) - len(critical),
             },
             "cra_article_mapping": {
-                "annex_i_section_1": sum(
-                    1 for f in findings if "annex_i_section_1" in f.cra_mapping
-                ),
-                "annex_i_section_2": sum(
-                    1 for f in findings if "annex_i_section_2" in f.cra_mapping
-                ),
+                "annex_i_section_1": sum(1 for f in findings if "annex_i_section_1" in f.cra_mapping),
+                "annex_i_section_2": sum(1 for f in findings if "annex_i_section_2" in f.cra_mapping),
                 "annex_ii": sum(1 for f in findings if "annex_ii" in f.cra_mapping),
                 "article_13": sum(1 for f in findings if "article_13" in f.cra_mapping),
             },

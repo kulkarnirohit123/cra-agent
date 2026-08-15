@@ -185,7 +185,8 @@ PAGES = [
 ]
 
 # Custom CSS
-st.markdown("""
+st.markdown(
+    """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -259,7 +260,9 @@ st.markdown("""
         letter-spacing: 0.02em;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 def render_severity_badge(severity: str) -> str:
@@ -268,7 +271,7 @@ def render_severity_badge(severity: str) -> str:
     return (
         f'<span class="severity-badge" '
         f'style="background-color:{color}1A;color:{color};border:1px solid {color}66;">'
-        f'{severity.upper()}</span>'
+        f"{severity.upper()}</span>"
     )
 
 
@@ -284,9 +287,7 @@ def make_bar_chart(
     height: int = 300,
 ) -> go.Figure:
     """Build a themed Plotly bar chart matching the dashboard's light card style."""
-    fig = go.Figure(
-        data=[go.Bar(x=list(data.keys()), y=list(data.values()), marker_color=color)]
-    )
+    fig = go.Figure(data=[go.Bar(x=list(data.keys()), y=list(data.values()), marker_color=color)])
     fig.update_layout(
         template="plotly_white",
         height=height,
@@ -481,9 +482,9 @@ with:
 Replace:
 
 ```python
-                with st.expander(f"🔴 {finding.get('severity', 'unknown').upper()}: {finding.get('vuln_id', 'N/A')}"):
-                    st.markdown(f"**File:** `{finding.get('file', 'N/A')}`")
-                    st.markdown(f"**Detected:** {finding.get('detected_at', 'N/A')}")
+with st.expander(f"🔴 {finding.get('severity', 'unknown').upper()}: {finding.get('vuln_id', 'N/A')}"):
+    st.markdown(f"**File:** `{finding.get('file', 'N/A')}`")
+    st.markdown(f"**Detected:** {finding.get('detected_at', 'N/A')}")
 ```
 
 with:
@@ -590,14 +591,16 @@ Replace:
 with:
 
 ```python
-    findings_df = pd.DataFrame(finding_data)
+findings_df = pd.DataFrame(finding_data)
 
-    def _color_severity(val: str) -> str:
-        color = SEVERITY_COLORS.get(val.lower(), SEVERITY_COLORS["info"])
-        return f"color: {color}; font-weight: 600;"
 
-    styled_df = findings_df.style.map(_color_severity, subset=["Severity"])
-    st.dataframe(styled_df, use_container_width=True)
+def _color_severity(val: str) -> str:
+    color = SEVERITY_COLORS.get(val.lower(), SEVERITY_COLORS["info"])
+    return f"color: {color}; font-weight: 600;"
+
+
+styled_df = findings_df.style.map(_color_severity, subset=["Severity"])
+st.dataframe(styled_df, use_container_width=True)
 ```
 
 - [ ] **Step 3: Replace the scanner distribution chart**

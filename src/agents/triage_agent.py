@@ -17,8 +17,8 @@ from src.core.models import (
     Finding,
     RecommendedAction,
     Severity,
-    TriageResult,
     TriagedFinding,
+    TriageResult,
 )
 from src.utils.logger import get_logger
 
@@ -28,7 +28,8 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-TRIAGE_PROMPT_TEMPLATE = """You are a security expert performing triage on vulnerability findings for CRA (Cyber Resilience Act) compliance.
+TRIAGE_PROMPT_TEMPLATE = """You are a security expert performing triage on vulnerability findings \
+for CRA (Cyber Resilience Act) compliance.
 
 Analyze the following vulnerability finding and provide a structured assessment:
 

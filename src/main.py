@@ -58,9 +58,7 @@ class CRAAgent:
         logger.info("Initializing CRA-AGENT", env=self.settings.app_env)
 
         # Initialize suppression store
-        self.suppression_store = SuppressionStore(
-            db_path=self.settings.suppression_db_path
-        )
+        self.suppression_store = SuppressionStore(db_path=self.settings.suppression_db_path)
 
         # Initialize integrations
         self.llm_client = LLMClient(
@@ -253,15 +251,12 @@ class GitHubPollingAgent:
         # Check if GitHub is configured
         if not self.settings.github_enabled:
             logger.error(
-                "GitHub not configured. Please set GITHUB_APP_ID and "
-                "GITHUB_PRIVATE_KEY_PATH in your .env file."
+                "GitHub not configured. Please set GITHUB_APP_ID and GITHUB_PRIVATE_KEY_PATH in your .env file."
             )
             sys.exit(1)
 
         # Initialize suppression store
-        self.suppression_store = SuppressionStore(
-            db_path=self.settings.suppression_db_path
-        )
+        self.suppression_store = SuppressionStore(db_path=self.settings.suppression_db_path)
 
         # Initialize LLM client
         self.llm_client = LLMClient(
@@ -328,7 +323,6 @@ class GitHubPollingAgent:
         from datetime import datetime
 
         commit_sha = commit.get("sha", "")
-        commit_message = commit.get("commit", {}).get("message", "")
         author = commit.get("commit", {}).get("author", {}).get("name", "")
         scan_id = str(uuid.uuid4())
         scan_start = datetime.utcnow()
@@ -354,6 +348,7 @@ class GitHubPollingAgent:
         # Initialize metrics store
         from src.analytics.metrics_store import MetricsStore
         from src.analytics.models import ScanMetrics, SeverityDistribution
+
         metrics_store = MetricsStore(Path("./data/metrics.db"))
 
         try:
@@ -404,6 +399,7 @@ class GitHubPollingAgent:
 
             # Create file changes for scanning
             from src.core.models import ChangeType, FileChange
+
             file_changes = []
             for f in files:
                 status = f.get("status", "modified")
@@ -413,12 +409,14 @@ class GitHubPollingAgent:
                     "removed": ChangeType.DELETED,
                 }.get(status, ChangeType.MODIFIED)
 
-                file_changes.append(FileChange(
-                    file_path=f.get("filename", ""),
-                    change_type=change_type,
-                    file_extension=Path(f.get("filename", "")).suffix,
-                    patch=f.get("patch", ""),
-                ))
+                file_changes.append(
+                    FileChange(
+                        file_path=f.get("filename", ""),
+                        change_type=change_type,
+                        file_extension=Path(f.get("filename", "")).suffix,
+                        patch=f.get("patch", ""),
+                    )
+                )
 
             # Run actual scanners on the cloned repo
             findings_count = 0
@@ -430,9 +428,24 @@ class GitHubPollingAgent:
             python_files = [f for f in file_changes if f.file_extension == ".py"]
             if python_files and "bandit" in repo_config.get("scanners", []):
                 try:
+                    import shutil
                     import subprocess
-                    result = subprocess.run(
-                        ["bandit", "-r", str(repo_path), "-f", "json", "-o", "/tmp/bandit_results.json"],
+                    import tempfile
+
+                    bandit_path = shutil.which("bandit") or "bandit"
+                    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+                        bandit_output_path = tmp.name
+
+                    subprocess.run(
+                        [
+                            bandit_path,
+                            "-r",
+                            str(repo_path),
+                            "-f",
+                            "json",
+                            "-o",
+                            bandit_output_path,
+                        ],
                         capture_output=True,
                         text=True,
                         timeout=60,
@@ -441,7 +454,8 @@ class GitHubPollingAgent:
                     # Parse bandit results if available
                     try:
                         import json
-                        with open("/tmp/bandit_results.json") as f:
+
+                        with open(bandit_output_path) as f:
                             bandit_data = json.load(f)
                         findings = bandit_data.get("results", [])
                         findings_count += len(findings)
@@ -453,8 +467,10 @@ class GitHubPollingAgent:
                                 severity_dist.medium += 1
                             elif severity == "low":
                                 severity_dist.low += 1
-                    except Exception:
-                        pass
+                    except Exception as parse_error:
+                        logger.debug("Failed to parse bandit output", error=str(parse_error))
+                    finally:
+                        Path(bandit_output_path).unlink(missing_ok=True)
                 except Exception as e:
                     errors.append(f"bandit: {str(e)}")
                     logger.warning("Bandit scan failed", error=str(e))
@@ -462,9 +478,25 @@ class GitHubPollingAgent:
             # Try to run gitleaks for secrets
             if "gitleaks" in repo_config.get("scanners", []):
                 try:
+                    import shutil
                     import subprocess
-                    result = subprocess.run(
-                        ["gitleaks", "detect", "--source", str(repo_path), "--report-format", "json", "--report-path", "/tmp/gitleaks_results.json"],
+                    import tempfile
+
+                    gitleaks_path = shutil.which("gitleaks") or "gitleaks"
+                    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+                        gitleaks_output_path = tmp.name
+
+                    subprocess.run(
+                        [
+                            gitleaks_path,
+                            "detect",
+                            "--source",
+                            str(repo_path),
+                            "--report-format",
+                            "json",
+                            "--report-path",
+                            gitleaks_output_path,
+                        ],
                         capture_output=True,
                         text=True,
                         timeout=60,
@@ -473,14 +505,17 @@ class GitHubPollingAgent:
                     # Parse gitleaks results if available
                     try:
                         import json
-                        with open("/tmp/gitleaks_results.json") as f:
+
+                        with open(gitleaks_output_path) as f:
                             gitleaks_data = json.load(f)
                         findings = gitleaks_data.get("leaks", [])
                         findings_count += len(findings)
-                        for finding in findings:
+                        for _finding in findings:
                             severity_dist.high += 1  # Secrets are typically high severity
-                    except Exception:
-                        pass
+                    except Exception as parse_error:
+                        logger.debug("Failed to parse gitleaks output", error=str(parse_error))
+                    finally:
+                        Path(gitleaks_output_path).unlink(missing_ok=True)
                 except Exception as e:
                     errors.append(f"gitleaks: {str(e)}")
                     logger.warning("Gitleaks scan failed", error=str(e))
@@ -594,9 +629,7 @@ class GitHubPollingAgent:
 
 def main() -> None:
     """Main entry point with mode selection."""
-    parser = argparse.ArgumentParser(
-        description="CRA-AGENT - Cyber Resilience Act Compliance Agent"
-    )
+    parser = argparse.ArgumentParser(description="CRA-AGENT - Cyber Resilience Act Compliance Agent")
     parser.add_argument(
         "--mode",
         choices=["local", "github", "webhook"],

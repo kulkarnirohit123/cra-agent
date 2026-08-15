@@ -23,8 +23,9 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.main import GitHubPollingAgent
 import asyncio
+
+from src.main import GitHubPollingAgent
 
 
 def print_setup_guide() -> None:
@@ -121,25 +122,25 @@ def print_setup_guide() -> None:
 def check_configuration() -> bool:
     """Check if GitHub is configured."""
     from config.settings import get_settings
-    
+
     settings = get_settings()
-    
+
     if not settings.github_app_id:
         print("❌ GITHUB_APP_ID not set in .env")
         return False
-    
+
     if not settings.github_installation_id:
         print("❌ GITHUB_INSTALLATION_ID not set in .env")
         return False
-    
+
     if not settings.github_private_key_path.exists():
         print(f"❌ Private key not found at: {settings.github_private_key_path}")
         return False
-    
+
     if not settings.github_repos_config.exists():
         print(f"❌ Repos config not found at: {settings.github_repos_config}")
         return False
-    
+
     print("✅ Configuration looks good!")
     return True
 
@@ -147,10 +148,8 @@ def check_configuration() -> bool:
 def main() -> None:
     """Main entry point."""
     import argparse
-    
-    parser = argparse.ArgumentParser(
-        description="Run CRA-AGENT in GitHub polling mode (no webhooks needed)"
-    )
+
+    parser = argparse.ArgumentParser(description="Run CRA-AGENT in GitHub polling mode (no webhooks needed)")
     parser.add_argument(
         "--setup",
         action="store_true",
@@ -162,29 +161,29 @@ def main() -> None:
         help="Check configuration",
     )
     args = parser.parse_args()
-    
+
     if args.setup:
         print_setup_guide()
         return
-    
+
     if args.check:
         if check_configuration():
             print("\n✅ Ready to run! Execute: python scripts/run_github_polling.py")
         else:
             print("\n❌ Configuration incomplete. Run with --setup for guide.")
         return
-    
+
     # Check configuration before running
     print("Checking configuration...")
     if not check_configuration():
         print("\n❌ Configuration incomplete. Run with --setup for guide.")
         sys.exit(1)
-    
+
     print("\n🚀 Starting CRA-AGENT in GitHub polling mode...")
     print("   No webhooks or ngrok needed - everything stays local!\n")
-    
+
     agent = GitHubPollingAgent()
-    
+
     try:
         asyncio.run(agent.run())
     except KeyboardInterrupt:

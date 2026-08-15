@@ -226,8 +226,7 @@ class JiraWebhookHandler:
             # Add comment to Jira confirming suppression
             await self.jira_client.add_comment(
                 event.issue_key,
-                f"CRA-AGENT: Suppression rule added for {vuln_id}. "
-                f"Future scans will ignore this vulnerability.",
+                f"CRA-AGENT: Suppression rule added for {vuln_id}. Future scans will ignore this vulnerability.",
             )
 
             logger.info(
@@ -275,8 +274,7 @@ class JiraWebhookHandler:
             # Add comment acknowledging fix request
             await self.jira_client.add_comment(
                 event.issue_key,
-                f"CRA-AGENT: Fix workflow initiated for {vuln_id}. "
-                f"A pull request will be created shortly.",
+                f"CRA-AGENT: Fix workflow initiated for {vuln_id}. A pull request will be created shortly.",
             )
 
             # TODO: Trigger actual fix workflow
@@ -328,8 +326,7 @@ class JiraWebhookHandler:
 
             await self.jira_client.add_comment(
                 event.issue_key,
-                f"CRA-AGENT: Suppression removed for {vuln_id}. "
-                f"Vulnerability will be re-scanned on next commit.",
+                f"CRA-AGENT: Suppression removed for {vuln_id}. Vulnerability will be re-scanned on next commit.",
             )
 
             return {

@@ -252,9 +252,7 @@ class CRAOrchestrator:
         jira_tickets = [JiraTicket(**t) for t in state["jira_tickets"]]
 
         # Filter to findings that need auto-fix
-        fixable_findings = [
-            f for f in triaged_findings if f.triage.recommended_action.value == "fix_now"
-        ]
+        fixable_findings = [f for f in triaged_findings if f.triage.recommended_action.value == "fix_now"]
 
         logger.info("Auto-fixing findings", count=len(fixable_findings))
 

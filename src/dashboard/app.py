@@ -16,7 +16,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.analytics.metrics_store import MetricsStore
-from src.analytics.models import AgentMetrics, ROIMetrics
+from src.analytics.models import ROIMetrics
 
 # Page config
 st.set_page_config(
@@ -27,7 +27,8 @@ st.set_page_config(
 )
 
 # Custom CSS
-st.markdown("""
+st.markdown(
+    """
 <style>
     .metric-card {
         background-color: #f0f2f6;
@@ -53,7 +54,9 @@ st.markdown("""
         font-weight: bold;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 @st.cache_resource
@@ -239,7 +242,7 @@ def render_scans() -> None:
     with col1:
         st.metric("Total Scans", total_scans)
     with col2:
-        st.metric("Successful", successful_scans, f"{successful_scans/total_scans*100:.1f}%")
+        st.metric("Successful", successful_scans, f"{successful_scans / total_scans * 100:.1f}%")
     with col3:
         st.metric("Total Findings", total_findings)
     with col4:
@@ -252,16 +255,18 @@ def render_scans() -> None:
 
     scan_data = []
     for scan in scans:
-        scan_data.append({
-            "Scan ID": scan.scan_id[:8],
-            "Commit": scan.commit_hash[:7],
-            "Branch": scan.branch,
-            "Started": scan.started_at.strftime("%Y-%m-%d %H:%M"),
-            "Duration": f"{scan.duration_seconds:.1f}s" if scan.duration_seconds else "N/A",
-            "Files": scan.files_scanned,
-            "Findings": scan.findings_count,
-            "Status": "✅" if scan.success else "❌",
-        })
+        scan_data.append(
+            {
+                "Scan ID": scan.scan_id[:8],
+                "Commit": scan.commit_hash[:7],
+                "Branch": scan.branch,
+                "Started": scan.started_at.strftime("%Y-%m-%d %H:%M"),
+                "Duration": f"{scan.duration_seconds:.1f}s" if scan.duration_seconds else "N/A",
+                "Files": scan.files_scanned,
+                "Findings": scan.findings_count,
+                "Status": "✅" if scan.success else "❌",
+            }
+        )
 
     st.dataframe(scan_data, use_container_width=True)
 
@@ -329,10 +334,10 @@ def render_findings() -> None:
         st.metric("Total Findings", len(findings))
     with col2:
         ticketed = sum(1 for f in findings if f.ticket_key)
-        st.metric("Ticketed", ticketed, f"{ticketed/len(findings)*100:.1f}%")
+        st.metric("Ticketed", ticketed, f"{ticketed / len(findings) * 100:.1f}%")
     with col3:
         fixed = sum(1 for f in findings if f.fix_completed_at)
-        st.metric("Fixed", fixed, f"{fixed/len(findings)*100:.1f}%")
+        st.metric("Fixed", fixed, f"{fixed / len(findings) * 100:.1f}%")
     with col4:
         suppressed_count = sum(1 for f in findings if f.suppressed)
         st.metric("Suppressed", suppressed_count)
@@ -344,17 +349,19 @@ def render_findings() -> None:
 
     finding_data = []
     for finding in findings:
-        finding_data.append({
-            "ID": finding.finding_id[:8],
-            "Vuln ID": finding.vuln_id or "N/A",
-            "Scanner": finding.scanner,
-            "Severity": finding.severity.upper(),
-            "File": finding.file_path,
-            "Detected": finding.detected_at.strftime("%Y-%m-%d"),
-            "Ticket": finding.ticket_key or "-",
-            "Fixed": "✅" if finding.fix_completed_at else "❌",
-            "Suppressed": "🚫" if finding.suppressed else "✅",
-        })
+        finding_data.append(
+            {
+                "ID": finding.finding_id[:8],
+                "Vuln ID": finding.vuln_id or "N/A",
+                "Scanner": finding.scanner,
+                "Severity": finding.severity.upper(),
+                "File": finding.file_path,
+                "Detected": finding.detected_at.strftime("%Y-%m-%d"),
+                "Ticket": finding.ticket_key or "-",
+                "Fixed": "✅" if finding.fix_completed_at else "❌",
+                "Suppressed": "🚫" if finding.suppressed else "✅",
+            }
+        )
 
     st.dataframe(finding_data, use_container_width=True)
 
@@ -517,13 +524,15 @@ def render_roi() -> None:
     if roi_history:
         history_data = []
         for record in roi_history:
-            history_data.append({
-                "Period": record["period_end"][:10],
-                "ROI %": record["roi_percentage"],
-                "Value ($)": record["total_value"],
-                "Time Saved (hrs)": record["time_saved_hours"],
-                "Effectiveness": record["effectiveness"] * 100,
-            })
+            history_data.append(
+                {
+                    "Period": record["period_end"][:10],
+                    "ROI %": record["roi_percentage"],
+                    "Value ($)": record["total_value"],
+                    "Time Saved (hrs)": record["time_saved_hours"],
+                    "Effectiveness": record["effectiveness"] * 100,
+                }
+            )
         st.dataframe(history_data, use_container_width=True)
     else:
         st.info("No ROI history recorded yet. Click 'Save ROI Snapshot' to record current metrics.")
@@ -537,74 +546,78 @@ def render_roi() -> None:
 def render_github() -> None:
     """Render GitHub integration page."""
     st.title("🐙 GitHub Integration")
-    
+
     st.markdown("""
     This page allows you to manage your GitHub repositories and trigger scans manually.
     """)
-    
+
     # Check if GitHub is configured
     from config.settings import get_settings
+
     settings = get_settings()
-    
+
     if not settings.github_enabled:
-        st.warning("⚠️ GitHub is not configured. Please set GITHUB_APP_ID and GITHUB_PRIVATE_KEY_PATH in your .env file.")
+        st.warning(
+            "⚠️ GitHub is not configured. Please set GITHUB_APP_ID and GITHUB_PRIVATE_KEY_PATH in your .env file."
+        )
         st.markdown("""
         ### Setup Instructions
-        
+
         1. **Create a GitHub App** at https://github.com/settings/apps/new
            - UNCHECK "Active" for webhooks (we use polling!)
            - Set permissions: Contents (Read), Metadata (Read), Pull requests (Read/Write), Commit statuses (Read/Write)
-        
+
         2. **Generate a private key** and move it to your project
-        
+
         3. **Update your .env** with the App ID and Installation ID
-        
+
         4. **Restart the agent**
         """)
         return
-    
+
     st.success("✅ GitHub is configured")
-    
+
     # Load repos from config
     import yaml
+
     repos_config_path = Path("./config/repos.yaml")
-    
+
     if not repos_config_path.exists():
         st.error(f"❌ Repos config not found at {repos_config_path}")
         return
-    
+
     with open(repos_config_path) as f:
         repos_config = yaml.safe_load(f)
-    
+
     repositories = repos_config.get("repositories", [])
-    
+
     if not repositories:
         st.warning("No repositories configured. Edit `config/repos.yaml` to add repositories.")
         return
-    
+
     st.markdown("---")
-    
+
     # Repository management
     st.subheader("📁 Configured Repositories")
-    
+
     # Check which repos are cloned locally
     repos_dir = Path("./repos")
     cloned_repos = [d.name for d in repos_dir.iterdir() if d.is_dir()] if repos_dir.exists() else []
-    
+
     for i, repo in enumerate(repositories):
         repo_name = repo.get("name", "")
         enabled = repo.get("enabled", True)
         branches = repo.get("branches", ["main"])
         language = repo.get("language", "unknown")
         scanners = repo.get("scanners", [])
-        
+
         # Check if repo is cloned
         repo_short_name = repo_name.split("/")[-1] if "/" in repo_name else repo_name
         is_cloned = repo_short_name in cloned_repos
-        
+
         with st.expander(f"{'🟢' if enabled else '🔴'} {repo_name} {'✅' if is_cloned else '⬇️'}"):
             col1, col2 = st.columns([3, 1])
-            
+
             with col1:
                 st.markdown(f"**Description:** {repo.get('description', 'N/A')}")
                 st.markdown(f"**Language:** {language}")
@@ -612,14 +625,14 @@ def render_github() -> None:
                 st.markdown(f"**Scanners:** {', '.join(scanners)}")
                 st.markdown(f"**Enabled:** {'Yes' if enabled else 'No'}")
                 st.markdown(f"**Cloned Locally:** {'Yes' if is_cloned else 'No'}")
-            
+
             with col2:
                 # Scan Now button
-                if st.button(f"🔍 Scan Now", key=f"scan_{i}"):
+                if st.button("🔍 Scan Now", key=f"scan_{i}"):
                     with st.spinner(f"Scanning {repo_name}..."):
                         # Run scan in a subprocess to avoid blocking the UI
                         import subprocess
-                        
+
                         # Get the latest commit for this repo
                         scan_cmd = [
                             sys.executable,
@@ -639,104 +652,108 @@ async def scan():
         private_key=settings.github_private_key,
         installation_id=settings.github_installation_id,
     )
-    
+
     # Get latest commit
     commits = await client.list_recent_commits(
-        owner="{repo_name.split('/')[0]}",
-        repo="{repo_name.split('/')[1]}",
+        owner="{repo_name.split("/")[0]}",
+        repo="{repo_name.split("/")[1]}",
         branch="{branches[0]}",
         limit=1,
     )
-    
+
     if commits:
         commit = commits[0]
         print(f"Latest commit: {{commit['sha'][:7]}}")
         print(f"Message: {{commit['commit']['message'][:50]}}")
-        
+
         # Clone/update repo
         from pathlib import Path
         repos_dir = Path("./repos")
         repos_dir.mkdir(exist_ok=True)
-        
+
         repo_path = client.clone_repo(
-            owner="{repo_name.split('/')[0]}",
-            repo="{repo_name.split('/')[1]}",
+            owner="{repo_name.split("/")[0]}",
+            repo="{repo_name.split("/")[1]}",
             target_dir=repos_dir,
             branch="{branches[0]}",
         )
         print(f"Repo cloned to: {{repo_path}}")
-    
+
     await client.close()
 
 asyncio.run(scan())
 print("Scan triggered successfully!")
-'''
+''',
                         ]
-                        
+
                         result = subprocess.run(scan_cmd, capture_output=True, text=True)
-                        
+
                         if result.returncode == 0:
                             st.success(f"✅ Scan triggered for {repo_name}")
                             st.code(result.stdout)
                         else:
                             st.error(f"❌ Scan failed: {result.stderr}")
-                
+
                 # Clone button (if not cloned)
                 if not is_cloned:
-                    if st.button(f"⬇️ Clone", key=f"clone_{i}"):
+                    if st.button("⬇️ Clone", key=f"clone_{i}"):
                         with st.spinner(f"Cloning {repo_name}..."):
                             import subprocess
+
                             clone_cmd = [
-                                "git", "clone",
+                                "git",
+                                "clone",
                                 f"https://github.com/{repo_name}.git",
-                                str(repos_dir / repo_short_name)
+                                str(repos_dir / repo_short_name),
                             ]
                             result = subprocess.run(clone_cmd, capture_output=True, text=True)
-                            
+
                             if result.returncode == 0:
                                 st.success(f"✅ Cloned {repo_name}")
                                 st.rerun()
                             else:
                                 st.error(f"❌ Clone failed: {result.stderr}")
-    
+
     st.markdown("---")
-    
+
     # Quick actions
     st.subheader("⚡ Quick Actions")
-    
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         if st.button("🔄 Refresh Repository List"):
             st.cache_resource.clear()
             st.rerun()
-    
+
     with col2:
         if st.button("📥 Clone All Repos"):
             with st.spinner("Cloning all repositories..."):
                 import subprocess
+
                 repos_dir.mkdir(exist_ok=True)
-                
+
                 for repo in repositories:
                     repo_name = repo.get("name", "")
                     repo_short_name = repo_name.split("/")[-1] if "/" in repo_name else repo_name
-                    
+
                     if repo_short_name not in cloned_repos:
                         clone_cmd = [
-                            "git", "clone",
+                            "git",
+                            "clone",
                             f"https://github.com/{repo_name}.git",
-                            str(repos_dir / repo_short_name)
+                            str(repos_dir / repo_short_name),
                         ]
                         subprocess.run(clone_cmd, capture_output=True)
-                
+
                 st.success("✅ All repositories cloned!")
                 st.rerun()
-    
+
     with col3:
         if st.button("🔍 Scan All Repos"):
             with st.spinner("Scanning all repositories..."):
                 import subprocess
-                
+
                 for repo in repositories:
                     if repo.get("enabled", True):
                         repo_name = repo.get("name", "")
@@ -744,20 +761,20 @@ print("Scan triggered successfully!")
                         # Trigger scan via polling script
                         subprocess.Popen([sys.executable, "scripts/run_github_polling.py"])
                         break  # Just trigger one scan cycle
-                
+
                 st.success("✅ Scan triggered for all repositories!")
-    
+
     st.markdown("---")
-    
+
     # GitHub App status
     st.subheader("🔧 GitHub App Status")
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.markdown(f"**App ID:** `{settings.github_app_id}`")
         st.markdown(f"**Installation ID:** `{settings.github_installation_id}`")
-    
+
     with col2:
         st.markdown(f"**Private Key Path:** `{settings.github_private_key_path}`")
         st.markdown(f"**Key Exists:** {'✅' if settings.github_private_key_path.exists() else '❌'}")
@@ -779,7 +796,7 @@ def render_settings() -> None:
 
     with col2:
         summary = metrics_store.get_dashboard_summary()
-        st.markdown(f"**Total Records:**")
+        st.markdown("**Total Records:**")
         st.markdown(f"- Scans: {summary.total_scans}")
         st.markdown(f"- Findings: {summary.total_findings}")
         st.markdown(f"- Tickets: {summary.total_tickets}")

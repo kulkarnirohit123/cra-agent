@@ -12,8 +12,8 @@ from src.core.models import (
     JiraWebhookEvent,
     Severity,
     Suppression,
-    TriageResult,
     TriagedFinding,
+    TriageResult,
 )
 
 __all__ = [

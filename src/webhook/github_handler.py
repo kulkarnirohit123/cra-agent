@@ -8,12 +8,10 @@ Handles:
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from src.core.diff_analyzer import DiffAnalyzer
 from src.core.models import ChangeType, CommitInfo, FileChange
 from src.utils.logger import get_logger
 
@@ -69,9 +67,7 @@ class GitHubWebhookHandler:
             logger.warning("No webhook secret configured, skipping verification")
             return True
 
-        return self.github_client.verify_webhook_signature(
-            payload, signature, self.webhook_secret
-        )
+        return self.github_client.verify_webhook_signature(payload, signature, self.webhook_secret)
 
     async def handle_event(
         self,
@@ -116,9 +112,7 @@ class GitHubWebhookHandler:
         logger.info("GitHub ping received", zen=zen)
         return {"status": "ok", "zen": zen}
 
-    async def _handle_installation(
-        self, payload: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_installation(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Handle installation events (app installed/removed).
 
         Args:
@@ -159,7 +153,6 @@ class GitHubWebhookHandler:
         """
         # Extract push information
         ref = payload.get("ref", "")
-        before = payload.get("before", "")
         after = payload.get("after", "")
         repository = payload.get("repository", {})
         commits = payload.get("commits", [])
@@ -198,9 +191,7 @@ class GitHubWebhookHandler:
                 message=commit_message,
                 author=commit_author.get("name", ""),
                 author_email=commit_author.get("email", ""),
-                timestamp=datetime.fromisoformat(
-                    commit.get("timestamp", datetime.utcnow().isoformat())
-                ),
+                timestamp=datetime.fromisoformat(commit.get("timestamp", datetime.utcnow().isoformat())),
                 branch=branch,
             )
 
@@ -287,11 +278,13 @@ class GitHubWebhookHandler:
                         target_url=scan_result.get("dashboard_url", ""),
                     )
 
-                    results.append({
-                        "commit": commit_sha[:7],
-                        "status": "scanned",
-                        "findings": findings_count,
-                    })
+                    results.append(
+                        {
+                            "commit": commit_sha[:7],
+                            "status": "scanned",
+                            "findings": findings_count,
+                        }
+                    )
 
                 except Exception as e:
                     logger.error(
@@ -309,11 +302,13 @@ class GitHubWebhookHandler:
                         context="cra-agent/security",
                     )
 
-                    results.append({
-                        "commit": commit_sha[:7],
-                        "status": "error",
-                        "error": str(e),
-                    })
+                    results.append(
+                        {
+                            "commit": commit_sha[:7],
+                            "status": "error",
+                            "error": str(e),
+                        }
+                    )
 
         return {
             "status": "processed",
@@ -323,9 +318,7 @@ class GitHubWebhookHandler:
             "results": results,
         }
 
-    async def _handle_pull_request(
-        self, payload: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_pull_request(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Handle pull request events.
 
         Args:
@@ -342,7 +335,6 @@ class GitHubWebhookHandler:
         pr_title = pr.get("title", "")
         head_sha = pr.get("head", {}).get("sha", "")
         head_ref = pr.get("head", {}).get("ref", "")
-        base_ref = pr.get("base", {}).get("ref", "")
 
         owner = repository.get("owner", {}).get("login", "")
         repo_name = repository.get("name", "")
@@ -370,9 +362,7 @@ class GitHubWebhookHandler:
 
         # Get changed files in PR
         try:
-            files = await self.github_client.get_commit_diff(
-                owner=owner, repo=repo_name, sha=head_sha
-            )
+            files = await self.github_client.get_commit_diff(owner=owner, repo=repo_name, sha=head_sha)
 
             file_changes: list[FileChange] = []
             for f in files:

@@ -244,17 +244,17 @@ Manages the full Jira lifecycle:
 
 ```python
 class Finding(BaseModel):
-    id: str                          # Unique finding ID (hash)
-    scanner: str                     # Which scanner found it
-    vuln_id: str | None              # CVE/CWE identifier
+    id: str  # Unique finding ID (hash)
+    scanner: str  # Which scanner found it
+    vuln_id: str | None  # CVE/CWE identifier
     title: str
     description: str
-    severity: str                    # raw scanner severity
+    severity: str  # raw scanner severity
     file_path: str
     line_start: int
     line_end: int
     code_snippet: str
-    metadata: dict                   # scanner-specific metadata
+    metadata: dict  # scanner-specific metadata
     commit_hash: str
     timestamp: datetime
 ```
@@ -264,15 +264,15 @@ class Finding(BaseModel):
 ```python
 class TriagedFinding(Finding):
     triage: TriageResult
-    cra_mapping: list[str]           # applicable CRA articles
-    sbom_component: str | None       # affected SBOM component
+    cra_mapping: list[str]  # applicable CRA articles
+    sbom_component: str | None  # affected SBOM component
 ```
 
 ### 5.3 JiraTicket
 
 ```python
 class JiraTicket(BaseModel):
-    key: str                         # e.g., CRA-123
+    key: str  # e.g., CRA-123
     finding_id: str
     status: str
     url: str

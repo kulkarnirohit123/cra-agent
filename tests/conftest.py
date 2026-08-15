@@ -4,24 +4,22 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from src.core.models import (
     ChangeType,
+    CRARelevance,
+    Exploitability,
     FileChange,
     Finding,
-    Severity,
-    TriageResult,
-    TriagedFinding,
-    Exploitability,
     RecommendedAction,
-    CRARelevance,
+    Severity,
+    TriagedFinding,
+    TriageResult,
 )
 from src.scanners.suppression_store import SuppressionStore
-
 
 # =============================================================================
 # Fixtures: Paths and Directories
@@ -115,9 +113,7 @@ def mock_git_client() -> MagicMock:
     client.apply_fix = AsyncMock(return_value=True)
     client.commit = AsyncMock(return_value="abc123def456")
     client.push = AsyncMock(return_value=True)
-    client.create_pull_request = AsyncMock(
-        return_value="https://github.com/org/repo/pull/1"
-    )
+    client.create_pull_request = AsyncMock(return_value="https://github.com/org/repo/pull/1")
     client.checkout = AsyncMock(return_value=True)
     client.get_current_branch = AsyncMock(return_value="main")
     return client
